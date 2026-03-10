@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
-const SOCKET_URL = '${import.meta.env.VITE_API_URL}'
+const SOCKET_URL = `${import.meta.env.VITE_API_URL}`
 const TRACKED_STOCKS = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA']
 const MAX_POINTS = 60
 
