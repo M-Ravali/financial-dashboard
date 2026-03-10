@@ -1,8 +1,24 @@
 const Redis = require('ioredis');
 
-const redis = new Redis(process.env.REDIS_URL);
+const redis = new Redis(process.env.REDIS_URL, {
+  maxRetriesPerRequest: 3,
+  retryStrategy(times) {
+    if (times > 3) return null;
+    return Math.min(times * 200, 1000);
+  },
+  reconnectOnError(err) {
+    return true;
+  },
+  enableOfflineQueue: false,
+  lazyConnect: false,
+  keepAlive: 10000,
+});
 
 redis.on('connect', () => console.log('✅ Redis Connected'));
-redis.on('error', (err) => console.log('❌ Redis Error:', err.message));
+redis.on('error', (err) => {
+  if (!err.message.includes('ECONNRESET')) {
+    console.log('❌ Redis Error:', err.message);
+  }
+});
 
 module.exports = redis;
