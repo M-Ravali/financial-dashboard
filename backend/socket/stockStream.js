@@ -40,7 +40,7 @@ async function startStockStream(io) {
         console.log(`❌ Error fetching ${symbol}:`, error.message);
       }
     }
-  }, 10000);
+  }, 30000);
 }
 
 module.exports = { startStockStream };
