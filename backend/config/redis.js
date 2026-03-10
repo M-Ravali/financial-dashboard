@@ -1,24 +1,36 @@
-const Redis = require('ioredis');
+// Safe Redis wrapper - falls back gracefully if Redis is down
+let redisClient = null;
 
-const redis = new Redis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
-    if (times > 3) return null;
-    return Math.min(times * 200, 1000);
-  },
-  reconnectOnError(err) {
-    return true;
-  },
-  enableOfflineQueue: false,
-  lazyConnect: false,
-  keepAlive: 10000,
-});
+try {
+  const Redis = require('ioredis');
+  redisClient = new Redis(process.env.REDIS_URL, {
+    maxRetriesPerRequest: 1,
+    retryStrategy: () => null, // don't retry
+    enableOfflineQueue: false,
+    lazyConnect: true,
+  });
+  redisClient.on('connect', () => console.log('✅ Redis Connected'));
+  redisClient.on('error', () => {}); // silence errors
+} catch (err) {
+  console.log('⚠️ Redis unavailable');
+}
 
-redis.on('connect', () => console.log('✅ Redis Connected'));
-redis.on('error', (err) => {
-  if (!err.message.includes('ECONNRESET')) {
-    console.log('❌ Redis Error:', err.message);
+const get = async (key) => {
+  try {
+    if (!redisClient) return null;
+    return await redisClient.get(key);
+  } catch {
+    return null; // fallback to Finnhub
   }
-});
+};
 
-module.exports = redis;
+const setex = async (key, ttl, value) => {
+  try {
+    if (!redisClient) return;
+    await redisClient.setex(key, ttl, value);
+  } catch {
+    // silently fail
+  }
+};
+
+module.exports = { get, setex };
