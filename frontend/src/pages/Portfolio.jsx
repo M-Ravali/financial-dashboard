@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const API_BASE = 'http://localhost:5000'
+const API_BASE = '${import.meta.env.VITE_API_URL}'
 
 function Portfolio() {
   const [holdings, setHoldings] = useState([])
